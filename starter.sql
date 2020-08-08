@@ -6,8 +6,8 @@ VALUES
 (2, "Accounting"), 
 (3, "Distribution"), 
 (4, "Marketing"),
-(5, "Collections")
-(6, "Other")
+(5, "Collections"),
+(6, "Other"),
 (7, "Contractor");
 
 INSERT INTO role (id, title, salary, department_id)
@@ -35,7 +35,7 @@ VALUES
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
 VALUES 
-(1, "Max", "Scherzer", 1), 
+(1, "Max", "Scherzer", 1, null), 
 
 (2, "Stephen", "Strasburg", 2, 1), 
 (3, "Patrick", "Corbin", 3, 1), 
