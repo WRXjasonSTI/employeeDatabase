@@ -25,28 +25,26 @@ connection.connect(function (err) {
 
 function startApp() {
   clear();
-  menuPrompt();
+  userSelect();
 }
 
 function renderScreen(tableTitle, tableData) {
   clear();
-  //log table to console
   console.table(tableData);
-  //menu prompt
-  menuPrompt();
+  userSelect();
 }
 
-//initial prompt - which type of query?
-function menuPrompt() {
+//user input
+function userSelect() {
   inquirer
     .prompt({
       type: "list",
       name: "promptChoice",
-      message: "Make a selection:",
+      message: "What action would you like to do?",
       choices: [
         "View All Employees",
-        "View All Employees by Department",
-        "View All Employees by Manager",
+        "View Employees by Department",
+        "View Employees by Manager",
         "View Roles",
         "View Departments",
         "Add Employee",
@@ -57,7 +55,6 @@ function menuPrompt() {
         "Remove Department",
         "Update Employee Role",
         "Update Employee Manager",
-        "View Total Utilized Budget By Department",
         "Close Program",
       ],
     })
@@ -67,20 +64,21 @@ function menuPrompt() {
           queryEmployeesAll();
           break;
 
-        case "View All Employees by Department":
+        case "View Employees by Department":
           queryDepartments();
           break;
 
-        case "View All Employees by Manager":
+        case "View Employees by Manager":
           queryManagers();
           break;
 
         case "View Roles":
-          queryRolesOnly();
+          rolesOnly();
           break;
 
         case "View Departments":
-          queryDepartmentsOnly();
+          departmentsOnly
+          ();
           break;
 
         case "Add Employee":
@@ -115,10 +113,6 @@ function menuPrompt() {
           updateEmployeeManager();
           break;
 
-        case "View Total Utilized Budget By Department":
-          viewTotalBudgetByDepartment();
-          break;
-
         case "Close Program":
           clear();
           process.exit();
@@ -126,7 +120,7 @@ function menuPrompt() {
     });
 }
 
-//department prompt
+//Department Get
 function promptDepartments(departments) {
   inquirer
     .prompt({
@@ -136,11 +130,11 @@ function promptDepartments(departments) {
       choices: departments,
     })
     .then((answer) => {
-      queryEmployeesByDepartment(answer.promptChoice);
+      employeesSortedDept(answer.promptChoice);
     });
 }
 
-//manager prompt
+//Manager Get
 function promptManagers(managers) {
   inquirer
     .prompt({
@@ -154,9 +148,9 @@ function promptManagers(managers) {
     });
 }
 
-//query all employees
+//Pull all employees
 function queryEmployeesAll() {
-  //sql query
+
   const query = `
     SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name AS department_name, concat(manager.first_name, " ", manager.last_name) AS manager_full_name
     FROM employee 
@@ -165,7 +159,6 @@ function queryEmployeesAll() {
 	LEFT JOIN employee as manager ON employee.manager_id = manager.id;`;
   connection.query(query, (err, res) => {
     if (err) throw err;
-    //build table data array from query result
     const tableData = [];
     for (let i = 0; i < res.length; i++) {
       tableData.push({
@@ -178,22 +171,19 @@ function queryEmployeesAll() {
         Manager: res[i].manager_full_name,
       });
     }
-    //render screen
     renderScreen("All Employees", tableData);
   });
 }
 
-//query all departments
+//Pull all departments
 function queryDepartments() {
   const query = `SELECT department.name FROM department;`;
   connection.query(query, (err, res) => {
     if (err) throw err;
-    //extract department names to array
     const departments = [];
     for (let i = 0; i < res.length; i++) {
       departments.push(res[i].name);
     }
-    //prompt for department selection
     promptDepartments(departments);
   });
 }
@@ -202,18 +192,17 @@ function queryDepartmentsCallBack(callback) {
   const query = `SELECT department.name FROM department;`;
   connection.query(query, (err, res) => {
     if (err) throw err;
-    //extract department names to array
     const departments = [];
     for (let i = 0; i < res.length; i++) {
       departments.push(res[i].name);
     }
-    //prompt for department selection
     callback(departments);
   });
 }
 
-// Query the departments without employees
-function queryDepartmentsOnly() {
+// Show departments only
+function departmentsOnly
+() {
   const query = `SELECT id, department.name FROM department;`;
   connection.query(query, (err, res) => {
     if (err) throw err;
@@ -231,7 +220,7 @@ function queryDepartmentsOnly() {
 }
 
 // Query the Roles only and display them for viewing
-function queryRolesOnly() {
+function rolesOnly() {
   const query = `SELECT id, title FROM employeesdb.role;`;
   //build table data array from query result
   connection.query(query, (err, res) => {
@@ -267,7 +256,7 @@ function queryManagers() {
 }
 
 //query employees by department
-function queryEmployeesByDepartment(department) {
+function employeesSortedDept(department) {
   //sql query
   const query = `
     SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, concat(manager.first_name, " ", manager.last_name) AS manager_full_name
@@ -542,7 +531,7 @@ function addRole() {
             console.log(
               `${answer.rName} was added to the ${answer.roleDept} department.`
             );
-            queryRolesOnly();
+            rolesOnly();
           }
         );
       });
@@ -633,7 +622,7 @@ function removeRole() {
           if (err) throw err;
           console.log("Role Removed");
           //show updated Role table
-          setTimeout(queryRolesOnly, 500);
+          setTimeout(rolesOnly, 500);
         });
       });
   });
@@ -678,7 +667,8 @@ function removeDepartment() {
           if (err) throw err;
           console.log("Department Removed");
           //show updated Department table
-          setTimeout(queryDepartmentsOnly, 500);
+          setTimeout(departmentsOnly
+            , 500);
         });
       });
   });
@@ -885,26 +875,5 @@ function updateEmployeeManager() {
             });
         });
       });
-  });
-}
-
-//  view Total Budget By Department
-function viewTotalBudgetByDepartment() {
-  const query = `select d.name "Department", SUM(r.salary) "BudgetUtilized" 
-    from role r
-    JOIN department d 
-    JOIN employee e 
-    where r.id = e.role_id and r.id = d.id group by r.id;`;
-  connection.query(query, (err, res) => {
-    if (err) throw err;
-    //build table data array from query result
-    const tableData = [];
-    for (let i = 0; i < res.length; i++) {
-      tableData.push({
-        Department: res[i].Department,
-        "Budjet Utilized": res[i].BudgetUtilized,
-      });
-    }
-    renderScreen(`Total Budjet per Department`, tableData);
   });
 }
