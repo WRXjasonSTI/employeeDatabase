@@ -35,7 +35,7 @@ VALUES
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
 VALUES 
-(1, "Max", "Scherzer", 1, null), 
+(1, "Max", "Scherzer", 1, 1), 
 
 (2, "Stephen", "Strasburg", 2, 1), 
 (3, "Patrick", "Corbin", 3, 1), 
