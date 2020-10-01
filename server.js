@@ -351,14 +351,12 @@ function addEmployee() {
       },
     ])
     .then((answers) => {
-      //set newEmployee name
+      //Receive UI for new employee
       newEmployee.firstName = answers.firstName;
       newEmployee.lastName = answers.lastName;
-      //sql query for roles
       const query = `SELECT role.title, role.id FROM role;`;
       connection.query(query, (err, res) => {
         if (err) throw err;
-        //extract role names and ids to arrays
         const roles = [];
         const rolesNames = [];
         for (let i = 0; i < res.length; i++) {
@@ -368,7 +366,7 @@ function addEmployee() {
           });
           rolesNames.push(res[i].title);
         }
-        //prompt for role selection
+
         inquirer
           .prompt({
             type: "list",
@@ -377,7 +375,6 @@ function addEmployee() {
             choices: rolesNames,
           })
           .then((answer) => {
-            //get id of chosen role
             const chosenRole = answer.rolePromptChoice;
             let chosenRoleID;
             for (let i = 0; i < roles.length; i++) {
@@ -385,16 +382,14 @@ function addEmployee() {
                 chosenRoleID = roles[i].id;
               }
             }
-            //set newEmployee role ID
             newEmployee.roleID = chosenRoleID;
-            //sql query for managers
+
             const query = `
                     SELECT DISTINCT concat(manager.first_name, " ", manager.last_name) AS full_name, manager.id
                     FROM employee
                     LEFT JOIN employee AS manager ON manager.id = employee.manager_id;`;
             connection.query(query, (err, res) => {
               if (err) throw err;
-              //extract manager names and ids to arrays
               const managers = [];
               const managersNames = [];
               for (let i = 0; i < res.length; i++) {
@@ -404,7 +399,7 @@ function addEmployee() {
                   fullName: res[i].full_name,
                 });
               }
-              //prompt for manager selection
+
               inquirer
                 .prompt({
                   type: "list",
@@ -413,7 +408,6 @@ function addEmployee() {
                   choices: managersNames,
                 })
                 .then((answer) => {
-                  //get id of chosen manager
                   const chosenManager = answer.managerPromptChoice;
                   let chosenManagerID;
                   for (let i = 0; i < managers.length; i++) {
@@ -422,9 +416,7 @@ function addEmployee() {
                       break;
                     }
                   }
-                  //set newEmployee manager ID
                   newEmployee.managerID = chosenManagerID;
-                  //add employee insert sql query
                   const query = "INSERT INTO employee SET ?";
                   connection.query(
                     query,
@@ -437,7 +429,6 @@ function addEmployee() {
                     (err, res) => {
                       if (err) throw err;
                       console.log("Employee Added");
-                      //show updated employee table
                       setTimeout(queryEmployeesAll, 500);
                     }
                   );
@@ -476,10 +467,8 @@ function addDepartment() {
 }
 
 function addRole() {
-  //initialize
   const departments = [];
   const departmentsName = [];
-  //sql query
   const query = `SELECT id, name FROM department`;
   connection.query(query, (err, res) => {
     if (err) throw err;
@@ -537,14 +526,13 @@ function addRole() {
       });
   });
 }
-// Remove an employee from the database
+
 function removeEmployee() {
   const query = `
     SELECT id, concat(employee.first_name, " ", employee.last_name) AS employee_full_name
     FROM employee ;`;
   connection.query(query, (err, res) => {
     if (err) throw err;
-    //extract employee names and ids
     let employees = [];
     let employeesNames = [];
     for (let i = 0; i < res.length; i++) {
@@ -554,7 +542,7 @@ function removeEmployee() {
       });
       employeesNames.push(res[i].employee_full_name);
     }
-    //prompt for employee to remove
+
     inquirer
       .prompt({
         type: "list",
@@ -563,7 +551,6 @@ function removeEmployee() {
         choices: employeesNames,
       })
       .then((answer) => {
-        //get id of chosen employee
         const chosenEmployee = answer.employeePromptChoice;
         let chosenEmployeeID;
         for (let i = 0; i < employees.length; i++) {
@@ -576,7 +563,6 @@ function removeEmployee() {
         connection.query(query, { id: chosenEmployeeID }, (err, res) => {
           if (err) throw err;
           console.log("Employee Removed");
-          //show updated employee table
           setTimeout(queryEmployeesAll, 500);
         });
       });
